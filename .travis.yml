@@ -1,0 +1,23 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t carstendirks/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true carstendirks/react-test npm test
+
+after_success:
+    - docker build -t carstendirks/multi-client ./client
+    - docker build -t carstendirks/multi-nginx ./nginx
+    - docker build -t carstendirks/multi-server ./server
+    - docker build -t carstendirks/multi-worker ./worker
+    #login to docker cli
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+    #Push to dockerhub
+    - docker push carstendirks/multi-client
+    - docker push carstendirks/multi-nginx
+    - docker push carstendirks/multi-server
+    - docker push carstendirks/multi-worker
